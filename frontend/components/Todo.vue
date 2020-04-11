@@ -2,16 +2,16 @@
 	div
 		div.columns.is-centered
 			div.column.is-10-desktop.is-12-mobile.is-10-tablet
-				input(type="text", class="input is-medium", placeholder="Insira uma tarefa", v-model="name", v-on:keyup.enter="addTodo")
+				input(type="text", class="input is-medium", placeholder="Insira uma tarefa", v-model="name", v-on:keyup.enter="add")
 			div.column.is-expanded.is-mobile
-				button(class="button is-primary is-medium is-fullwidth", @click="addTodo") Salvar
+				button(class="button is-primary is-medium is-fullwidth", @click="add") Salvar
 		div
 			ul.todo-list.todo-list-divider
-				li(v-for="todo in todos", :key="todo._id")
+				li(v-for="todo in todoList", :key="todo._id")
 					div
 						span(v-if="todo.status", class="is-flex is-justified-between")
 							span.is-size-4-desktop.is-size-5-mobile {{ todo.name }}
-							button(class="button is-primary is-outlined", @click="closeTodo(todo._id)") Concluir
+							button(class="button is-primary is-outlined", @click="done(todo._id)") Concluir
 						span(v-else, class="is-flex is-justified-between")
 							span
 								del.is-size-4-desktop.is-size-5-mobile {{ todo.name }}
@@ -21,40 +21,37 @@
 
 <script>
 import Axios from "axios";
+import { mapState, mapActions } from 'vuex'
 
 const http = Axios.create({
 	baseURL: "/ws/v1/todos"
 })
 
-
 export default {
 	name: "Todo",
 	data() {
 		return {
-			todos: [],
 			name: ""
 		}
 	},
 	async mounted() {
-		this.todos = await this.getTodos()
+		await this.getTodos()
+	},
+	computed: {
+		...mapState(["todoList"])
 	},
 	methods: {
-		async addTodo() {
-			const res = await http.post("/insert", { name: this.name, status: true })
-			this.todos.unshift({ ...res.data })
+		...mapActions(["getTodos", "addTodo", "doneTodo"]),
+		
+		add() {
+			this.addTodo({
+				name: this.name,
+				status: true
+			})
 			this.name = ""
 		},
-		async getTodos() {
-			const res = await http.get("/")
-			return res.data;
-		},
-		async closeTodo(_id) { 
-			const res = await http.put(`/close/${_id}`)
-
-			if(res.status == 200 && res.data.modified > 0){
-				const index = this.todos.findIndex(item => item._id == _id)
-				this.todos[index].status = false;
-			}
+		done(id) {
+			this.doneTodo(id)
 		}
 	}
 }
