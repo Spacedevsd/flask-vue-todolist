@@ -1,8 +1,10 @@
-from flask import Blueprint, jsonify, request
-from . import schema
-from . import mongo
-from bson import ObjectId
+from datetime import datetime
 
+from bson import ObjectId
+from flask import Blueprint, jsonify, request
+import pymongo
+
+from . import mongo, schema
 
 todos = Blueprint("todos", __name__, url_prefix="/ws/v1/todos")
 
@@ -10,14 +12,14 @@ todos = Blueprint("todos", __name__, url_prefix="/ws/v1/todos")
 @todos.route("/")
 def gettodos():
     schemas = schema.TodoSchema(many=True)
-    todos_list = mongo.db.todos.find()
+    todos_list = mongo.db.todos.find().sort([("created_at", pymongo.DESCENDING )])
     return jsonify(schemas.dump(todos_list))
 
 
 @todos.route("/insert", methods=["POST"])
 def addtodos():
     data = request.get_json()
-    mongo.db.todos.insert_one(data)
+    mongo.db.todos.insert_one({"name": data["name"], "status": data["status"], "created_at": datetime.utcnow()})
 
     schemas = schema.TodoSchema()  
     return jsonify(schemas.dump(data))

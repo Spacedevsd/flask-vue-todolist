@@ -10,7 +10,7 @@
 				li(v-for="todo in todos", :key="todo._id")
 					div
 						span(v-if="todo.status", class="is-flex is-justified-between")
-							span {{ todo.name }}
+							span.is-size-4-desktop.is-size-5-mobile {{ todo.name }}
 							button(class="button is-primary is-outlined", @click="closeTodo(todo._id)") Concluir
 						span(v-else, class="is-flex is-justified-between")
 							span
@@ -41,7 +41,7 @@ export default {
 	methods: {
 		async addTodo() {
 			const res = await http.post("/insert", { name: this.name, status: true })
-			this.todos.push({ ...res.data })
+			this.todos.unshift({ ...res.data })
 			this.name = ""
 		},
 		async getTodos() {
